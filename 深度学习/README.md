@@ -81,14 +81,133 @@ $L=\frac{1}{N}\sum_{i=1}^N(y_i-z_i)^2$
 
 ### 训练过程
 求解参数w和b的数值，这个过程也称为模型训练过程。训练过程是深度学习模型的关键要素之一，其目标是让定义的损失函数Loss尽可能的小，也就是说找到一个参数解w和b，使得损失函数取得极小值。
-通过对w、b求偏导可得到最优参数，但是这种方法只对线性回归这样简单的任务有效。如果模型中含有非线性变换，或者损失函数不是均方差这种简单的形式，则很难通过上式求解。为了解决这个问题，下面我们将引入更加普适的数值求解方法：梯度下降法。
+通过对w、b求偏导可得到最优参数，但是这种方法只对线性回归这样简单的任务有效。如果模型中含有非线性变换，或者损失函数不是均方差这种简单的形式，则很难通过上式求解。
+为了解决这个问题，下面我们将引入更加普适的数值求解方法：梯度下降法。
 
 #### 梯度下降法
 
-随机梯度下降
+![alt text](./img/image1.gif)
 
-前向计算
+假设y=wx函数，已知一批x和y，需要求得最优的w。均方误差函数：
+$\bar{e} = (\hat{Y} - Y)^2$，将wx代入函数，得到函数
+$\bar{e} = (wx)^2 - 2wxy  + y^2$,因需求得w，我们已知了一批x和y的样本数据，那么认为w是变量，其它的为常量，简化的函数表达式就是：
+$\bar{e} = a*w^2 +b*y  + c$，对应的是一个曲线函数。如图右图所示曲线中，当w的斜率最小时，损失函数的值最小,此时的值就是最优值。
 
-反向传播
+#### 前向计算
+给定一批数据，计算出结果，从输入层开始到输出层得到预测结果的过程称为前向计算。如计算y=w*x的结果，x是固定值，w是变化的
 
-步长/学习率：
+#### 反向传播
+当前层计算需要依赖上一层计算的梯度值进行计算
+第一轮计算出来的值w，对应一个loss，同时会计算出值w对应的梯度W，此时loss还比较大，梯度W也较大，我们沿着梯度反方向基于学习率减少w的值，然后重新进行前向计算，又会得到w，loss，W的对应关系，如此反复，直到loss比较小。也就是第二轮的计算值依赖第一轮的值，重新进行前向计算。
+
+
+#### 步长/学习率：
+控制梯度每次移动的步长
+
+
+#### 损失函数之均方误差
+![alt text](./img/image2.png)
+均方误差表现的“圆滑”的坡度有两个好处：
+- 曲线的最低点是可导的。
+- 越接近最低点，曲线的坡度逐渐放缓，有助于通过当前的梯度来判断接近最低点的程度（是否逐渐减少步长，以免错过最低点）。
+
+#### 随机梯度下降法
+- mini-batch：每次迭代时抽取出来的一批数据被称为一个mini-batch。
+- batch_size：一个mini-batch所包含的样本数目称为batch_size。
+- epoch：当程序迭代的时候，按mini-batch逐渐抽取出样本，当把整个数据集都遍历到了的时候，则完成了一轮训练，也叫一个epoch。启动训练时，可以将训练的轮数num_epochs和batch_size作为参数传入。
+
+
+#### 归一化
+特征输入归一化后，不同参数输出的Loss是一个比较规整的曲线，学习率可以设置成统一的值 ；特征输入未归一化时，不同特征对应的参数所需的步长不一致，尺度较大的参数需要大步长，尺寸较小的参数需要小步长，导致无法设置统一的学习率。
+
+#### 预测样本数据归一化
+模型学到的权重、偏置等所有参数，都是基于这个"归一化世界"的数据特性得到的，模型根本不认识原始尺度下的数据，它只认识那个经过变换后的"归一化版本"。
+
+#### 预测时的样本需归一化，为什么使用训练样本的均值和极值计算
+每个批次的数据都有自己的均值和方差。如果分别归一化，那么不同批次的数据就会被映射到完全不同的尺度上。
+
+- 例子：训练时，我们把“房屋面积”的 [100, 500] 平方米映射到 [0, 1]。
+
+- 预测时，来了一个新样本，面积是 600 平方米。如果用这个样本自己的值归一化（假设只有一个样本，min=max=600），它会被归一化成 0（或NaN）。这显然毫无意义。
+
+- 更合理的做法是，用训练集的规则 min_train=100, max_train=500 来处理它。对于 600，它会变成 (600-100)/(500-100) = 1.25。这告诉模型：“这个样本超出了我们训练时见过的范围，是一个异常大的值。” 模型会根据它在训练集边界学到的模式进行外推。
+
+即使遇到超出范围的值，我们仍然坚持使用训练集的归一化参数，因为：保持数据变换的一致性和如实反映该样本相对于训练数据的"异常"程度
+
+#### 当部分参数的梯度计算为0是否意味着完成训练？
+如果曲线有多个波谷，可能学习到的不是最低的那个波谷
+
+
+```
+import numpy as np
+
+class Network(object):
+    def __init__(self, num_of_weights):
+        # 随机产生w的初始值
+        # 为了保持程序每次运行结果的一致性，此处设置固定的随机数种子
+        #np.random.seed(0)
+        self.w = np.random.randn(num_of_weights, 1)
+        self.b = 0.
+        
+    def forward(self, x):
+        z = np.dot(x, self.w) + self.b
+        return z
+    
+    def loss(self, z, y):
+        error = z - y
+        num_samples = error.shape[0]
+        cost = error * error
+        cost = np.sum(cost) / num_samples
+        return cost
+    
+    def gradient(self, x, y):
+        z = self.forward(x)
+        N = x.shape[0]
+        gradient_w = 1. / N * np.sum((z-y) * x, axis=0)
+        gradient_w = gradient_w[:, np.newaxis]
+        gradient_b = 1. / N * np.sum(z-y)
+        return gradient_w, gradient_b
+    
+    def update(self, gradient_w, gradient_b, eta = 0.01):
+        self.w = self.w - eta * gradient_w
+        self.b = self.b - eta * gradient_b
+            
+                
+    def train(self, training_data, num_epochs, batch_size=10, eta=0.01):
+        n = len(training_data)
+        losses = []
+        for epoch_id in range(num_epochs):
+            # 在每轮迭代开始之前，将训练数据的顺序随机打乱
+            # 然后再按每次取batch_size条数据的方式取出
+            np.random.shuffle(training_data)
+            # 将训练数据进行拆分，每个mini_batch包含batch_size条的数据
+            mini_batches = [training_data[k:k+batch_size] for k in range(0, n, batch_size)]
+            for iter_id, mini_batch in enumerate(mini_batches):
+                #print(self.w.shape)
+                #print(self.b)
+                x = mini_batch[:, :-1]
+                y = mini_batch[:, -1:]
+                a = self.forward(x)
+                loss = self.loss(a, y)
+                gradient_w, gradient_b = self.gradient(x, y)
+                self.update(gradient_w, gradient_b, eta)
+                losses.append(loss)
+                print('Epoch {:3d} / iter {:3d}, loss = {:.4f}'.
+                                 format(epoch_id, iter_id, loss))
+        
+        return losses
+
+# 获取数据
+train_data, test_data = load_data()
+
+# 创建网络
+net = Network(13)
+# 启动训练
+losses = net.train(train_data, num_epochs=50, batch_size=100, eta=0.1)
+
+# 画出损失函数的变化趋势
+plot_x = np.arange(len(losses))
+plot_y = np.array(losses)
+plt.plot(plot_x, plot_y)
+plt.show()
+```
