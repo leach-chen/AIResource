@@ -1,6 +1,6 @@
 # AI资源大全
 
-AI笔记，记录自己接触到、使用到的信息，包含资源导航、教程、模型、实战项目、面试资料等，持续更新...
+AI笔记，记录自己接触、学习、使用到的信息，持续更新...
 
 # <span id = ''>一、深度学习</span>
 
@@ -27,7 +27,18 @@ AI笔记，记录自己接触到、使用到的信息，包含资源导航、教
 | [PaddlePaddle](https://www.ultralytics.com/) | / | 百度飞浆的模型套件：[目标分类](https://github.com/PaddlePaddle/PaddleClas)、[目标检测](https://github.com/PaddlePaddle/PaddleDetection)、[图像分割](https://github.com/PaddlePaddle/PaddleSeg)、[NLP](https://github.com/PaddlePaddle/PaddleNLP)、[OCR](https://github.com/PaddlePaddle/PaddleOCR)、[语音](https://github.com/PaddlePaddle/PaddleSpeech/)|
 | [bert-base-chinese](https://huggingface.co/google-bert/bert-base-chinese/) |[教程]() | 训练将自然语言转换成结构化数据 |
 
-# <span id = ''>三、智能体</span>
+
+# <span id = ''>三、移动端</span>
+
+| 类别     |说明     |
+| ------------ |------------ |
+| [移动端模型部署](./移动端/移动端模型部署.md) |模型转换为移动端格式|
+| [C++](./移动端/C++.md) |C++使用记录，主要用于封装跨平台逻辑|
+| [native集成opencv](./移动端/native集成opencv.md) |android native集成使用opencv|
+
+
+
+# <span id = ''>四、智能体</span>
 
 
 | 网站     | 教程   |说明                                             |
@@ -36,7 +47,7 @@ AI笔记，记录自己接触到、使用到的信息，包含资源导航、教
 |[LangGraph](https://langchain-ai.github.io/langgraph/) |[教程](./Agent/langchain/README.md)|LangChain生态中专用于构建有状态多智能体系统的库，采用图结构支持循环、<br>回溯等复杂控制流通过中央状态组件确保上下文的连续性，特别适用于需要动态交互和多智能体协作的复杂应用|
 
 
-# <span id = ''>四、AI资源</span>
+# <span id = ''>五、AI资源</span>
 
 
 | 网站     | 类别   |说明                                             |
@@ -60,7 +71,7 @@ AI笔记，记录自己接触到、使用到的信息，包含资源导航、教
 |[TI-ONE](https://cloud.tencent.com/document/product/851/) |腾讯的全栈式人工智能开发服务平台，致力于打通包含从数据获取、数据处理、算法构建、模型训练、模型评估、模型部署、到 AI 应用开发的产业 + AI 落地全流程链路，帮助用户快速创建和部署 AI 应用|
 
 
-# <span id = ''>五、在线模型</span>
+# <span id = ''>六、在线模型</span>
 
 ### 语言模型
 
@@ -88,7 +99,7 @@ AI笔记，记录自己接触到、使用到的信息，包含资源导航、教
 
 ---
 
-# <span id = ''>六、实战项目</span>
+# <span id = ''>七、实战项目</span>
 
 智能体在项目中的实际应用
 
@@ -96,10 +107,11 @@ AI笔记，记录自己接触到、使用到的信息，包含资源导航、教
 
 UI自动化测试
 
+二维码识别
 
 ---
 
-# <span id = ''>七、AI面试</span>
+# <span id = ''>八、AI面试</span>
 
 1.  [深度学习基础常见面试题](https://paddlepedia.readthedocs.io/en/latest/tutorials/interview_questions/interview_questions.html)
 2. [卷积模型常见面试题](https://paddlepedia.readthedocs.io/en/latest/tutorials/interview_questions/interview_questions.html#id2)

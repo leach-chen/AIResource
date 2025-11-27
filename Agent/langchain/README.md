@@ -108,3 +108,42 @@ rag_chain = {"context": retriever, "question": RunnablePassthrough()} | prompt |
 response = rag_chain.invoke("tell me about cats")
 print(response.content)
 ```
+
+
+ ```
+ import os
+
+from langchain_anthropic import ChatAnthropic
+from langchain_community.tools.tavily_search import TavilySearchResults
+from langchain_openai import ChatOpenAI
+from langchain_tavily import TavilySearch
+from langchain_core.messages import HumanMessage
+from langgraph.checkpoint.memory import MemorySaver
+from langchain.agents import create_agent
+
+
+os.environ["ANTHROPIC_API_KEY"] = "xxx"
+
+
+# Create the agent
+memory = MemorySaver()
+model = ChatOpenAI(model="qwen-plus",base_url="https://dashscope.aliyuncs.com/compatible-mode/v1",api_key="xxx")
+search = TavilySearch(max_results=2,tavily_api_key="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")
+tools = [search]
+agent_executor = create_agent(model, tools, checkpointer=memory)
+
+# Use the agent
+config = {"configurable": {"thread_id": "abc123"}}
+for chunk in agent_executor.stream(
+    {"messages": [HumanMessage(content="hi im bob! and i live in sf")]}, config
+):
+    print(chunk)
+    print("----")
+
+for chunk in agent_executor.stream(
+    {"messages": [HumanMessage(content="whats the weather where I live?")]}, config
+):
+    print(chunk)
+    print("----")
+
+ ```
