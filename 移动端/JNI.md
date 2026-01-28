@@ -843,4 +843,42 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved) {
 }
 ```
 
+六、示例
+
+```
+
+Android:
+external fun processImageWithText(width: Int, height: Int, data: ByteArray, text: String): ByteArray
+
+jni:
+// 获取输入数据
+jsize data_len = env->GetArrayLength(data);
+jbyte* inputData = env->GetByteArrayElements(data, nullptr);
+// 释放资源
+env->ReleaseByteArrayElements(data, inputData, JNI_ABORT);
+
+
+Android:
+external fun predict(imageData: ImageData):ByteArray
+
+jni:
+// 获取Java类和字段ID
+jclass cls = env->GetObjectClass(imageData);
+jfieldID fidWidth = env->GetFieldID(cls, "width", "I");
+jfieldID fidHeight = env->GetFieldID(cls, "height", "I");
+jfieldID fidChannels = env->GetFieldID(cls, "channels", "I");
+jfieldID fidData = env->GetFieldID(cls, "data", "[B");
+
+// 提取字段值
+int width = env->GetIntField(imageData, fidWidth);
+int height = env->GetIntField(imageData, fidHeight);
+int channels = env->GetIntField(imageData, fidChannels);
+jbyteArray data = (jbyteArray)env->GetObjectField(imageData, fidData);
+// 将Java字节数组转换为C++指针
+jbyte* cData = env->GetByteArrayElements(data, nullptr);
+// 释放资源
+env->ReleaseByteArrayElements(data, cData, JNI_ABORT);
+
+```
+
 

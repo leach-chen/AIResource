@@ -35,6 +35,7 @@ AI笔记，记录自己接触、学习、使用到的信息，持续更新...
 | [移动端模型部署](./移动端/移动端模型部署.md) |模型转换为移动端格式|
 | [C++](./移动端/C++.md) |C++用法，主要用于封装跨平台逻辑|
 | [JNI](./移动端/JNI.md) |JNI用法|
+| [CMake](./移动端/CMake.md) |CMake用法|
 | [native集成opencv](./移动端/native集成opencv.md) |android native集成使用opencv|
 
 

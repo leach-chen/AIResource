@@ -332,3 +332,43 @@ set(CMAKE_SYSTEM_PROCESSOR arm)
 
 cmake -DCMAKE_TOOLCHAIN_FILE=toolchain.cmake ..
 ```
+
+```
+MyProject/                      # 项目根目录
+├── CMakeLists.txt              # 【根】全局设置，引入子目录
+├── app/
+│   ├── CMakeLists.txt          # 【应用】生成最终的可执行文件
+│   └── main.cpp
+├── libs/
+│   ├── math/                   # 【数学库模块】
+│   │   ├── CMakeLists.txt      # 定义 math 静态库/动态库
+│   │   ├── include/math.h
+│   │   └── src/*.cpp
+│   └── logger/                 # 【日志库模块】
+│       ├── CMakeLists.txt      # 定义 logger 库
+│       ├── include/logger.h
+│       └── src/*.cpp
+└── tests/                      # 【测试模块】
+    ├── CMakeLists.txt          # 定义测试可执行文件，链接 math 和 logger
+    └── test_math.cpp
+
+
+# 根 CMakeLists.txt
+cmake_minimum_required(VERSION 3.10)
+project(MyAwesomeApp)
+
+add_subdirectory(src)          # 主应用程序
+add_subdirectory(libs/core)    # 核心库
+add_subdirectory(libs/utils)   # 工具库
+add_subdirectory(tests)        # 测试模块
+
+
+# libs/math/CMakeLists.txt
+add_library(math STATIC src/calculator.cpp) # 定义math库
+target_include_directories(math PUBLIC include) # 头文件路径，PUBLIC属性会传递给使用者
+
+# app/CMakeLists.txt
+add_executable(MyApp main.cpp)
+target_link_libraries(MyApp PRIVATE math) # 链接math库
+# 链接后，MyApp会自动获得math的公共头文件路径，无需手动写 include_directories
+```
