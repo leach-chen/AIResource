@@ -138,11 +138,10 @@ Java_com_leach_dartrecognitionandroid_MainActivity_predict(JNIEnv *env, jobject 
 
 2：pt模型onnx转ncnn格式
 
+**yolo export model=DartLine.pt format=onnx imgsz=640 opset=12 simplify=True dynamic=False batch=1 nms=False half=False device=cpu**
+
 ```
-https://blog.csdn.net/weixin_33308579/article/details/157349378
-
-
-ultralytics版本：8.3.111
+使用----》
 
 加载你的训练模型（替换为实际路径）
 model = YOLO("../model/DartLine.pt")
@@ -157,19 +156,140 @@ model.export(
     simplify=True  # 启用ONNX简化（移除冗余节点，提升NCNN兼容性）
 )
 
-
-命令行
-yolo export model=DartLine.pt format=onnx imgsz=640 opset=12 simplify=True dynamic=False batch=1 nms=False half=False device=cpu
-
 ```
 
+
 ```
-验证：
-ncnn_model = YOLO("yolo11n_ncnn_model")
-results = ncnn_model("https://ultralytics.com/images/bus.jpg")
-print(f"Detected {len(results[0].boxes)} objects")  # 应输出合理数值（如6）
+https://guo-pu.blog.csdn.net/article/details/142942825
+
+ 
+# export_onnx.py
+from ultralytics import YOLO
+import sys
+
+def export_yolo_to_onnx(model_path, output_path="yolo_export.onnx"):
+    """
+    将YOLO模型导出为ONNX格式
+    
+    参数:
+        model_path: PyTorch模型路径 (.pt)
+        output_path: 输出ONNX文件路径
+    """
+    print(f"正在加载模型: {model_path}")
+    
+    # 加载YOLO模型
+    model = YOLO(model_path)
+    
+    # 获取模型信息
+    print(f"模型类别数: {model.model.nc}")
+    print(f"模型输入尺寸: {model.model.args.get('imgsz', 640)}")
+    
+    # 导出ONNX
+    print(f"正在导出ONNX到: {output_path}")
+    
+    success = model.export(
+        format='onnx',
+        imgsz=640,           # 输入图像尺寸
+        opset=12,            # ONNX opset版本（12最稳定）
+        simplify=True,       # 简化模型
+        dynamic=False,       # 固定输入尺寸（移动端推荐）
+        batch=1,             # 批大小设为1
+        nms=False,           # 不包含NMS（重要！）
+        half=False,          # 不使用FP16（确保兼容性）
+        workspace=4,         # GPU工作空间（GB）
+        device='cpu',        # 在CPU上导出确保兼容性
+        verbose=True         # 显示详细信息
+    )
+    
+    if success:
+        print(f"✅ ONNX导出成功: {output_path}")
+        return output_path
+    else:
+        print("❌ ONNX导出失败")
+        return None
+
+# 使用示例
+if __name__ == "__main__":
+    # 你的模型路径
+    pt_model = "DartLine.pt"
+    onnx_output = "DartLine.onnx"
+    
+    export_yolo_to_onnx(pt_model, onnx_output)
 ```
 
+**简化ONNX模型**
+
+pip install onnxsim
+
+python -m onnxsim DartLine.onnx DartLine-sim.onnx
+
+```
+# 验证简化后的模型
+python -c "
+import onnx
+model = onnx.load('DartLine-sim.onnx')
+onnx.checker.check_model(model)
+print('✅ ONNX模型简化成功')
+print(f'输入: {model.graph.input[0].name}')
+print(f'输出: {model.graph.output[0].name}')
+"
+```
+
+**转换到ncnn格式**
+
+onnx2ncnn ./DartLine-sim.onnx ./DartLine.param ./DartLine.bin
+
+
+```
+**#pnnx DartLine1.onnx**
+
+注：如果执行pnnx转换时报错OMP: Error #15: Initializing libiomp5md.dll, but found libiomp5md.dll already initialized.这个错误是因为程序中有多个OpenMP运行时库被初始化。通常发生在链接了多个包含OpenMP的库，并且它们都试图初始化自己的OpenMP运行时环境。建议用conda/anaconda创建过一个环境，再用pnnx转
+
+inputshape = [batch_size, channels, height, width]
+# 示例：[1, 3, 224, 224]
+# batch_size = 1    # 一次处理1张图
+# channels = 3      # RGB三通道
+# height = 224      # 图像高度224像素
+# width = 224       # 图像宽度224像素
+
+
+# PNNX帮助信息
+pnnx --help
+# 常见参数：
+pnnx mobile.onnx \
+  inputshape=[1,3,224,224] \    # 输入形状（可选）
+  inputshape2=[1,4] \           # 多输入形状
+  device=cpu \                  # 运行设备：cpu/gpu
+  optlevel=2 \                  # 优化级别：0-2
+  fp16=1 \                      # 是否使用FP16：0/1
+  use_f16=1 \                   # 同上
+  use_fp16_storage=1 \          # 存储使用FP16
+  customop=./customop.def \     # 自定义操作定义
+  moduleop=./moduleop.def \     # 模块操作定义
+  pnnxparam=./param.par \       # PNNX参数文件
+  pnnxbin=./model.bin \         # PNNX权重文件
+  pnnxpy=./model.py \           # 生成Python接口
+  pnnxonnx=./model.onnx \       # 生成ONNX文件
+  ncnnparam=./model.ncnn.param \# 输出NCNN结构
+  ncnnbin=./model.ncnn.bin \    # 输出NCNN权重
+  ncnnpy=./model_ncnn.py        # 输出NCNN Python接口
+
+
+运行PNNX转换：
+如果ONNX模型输入是静态的，可以直接运行：pnnx mobile.onnx
+如果是动态的，运行：pnnx mobile.onnx inputshape=[x,x,x,x]
+
+
+查看模型信息
+pip install netron
+netron DartLine.pt
+
+打开模型后，点击任意输入/输出节点，在右侧属性面板查看shape
+判断方法：
+如果看到具体数字：[1, 3, 224, 224] → 静态维度
+如果看到?或None：[?, 3, ?, ?] → 动态维度
+如果看到符号名：[batch, 3, height, width] → 动态维度
+```
 
 
 3：同时集成opencv和ncnn会报编译冲突问题，解决方案可参考
